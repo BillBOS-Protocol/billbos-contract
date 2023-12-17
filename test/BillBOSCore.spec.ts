@@ -5,26 +5,23 @@ import {
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 
-const minute = 60;
-const hour = minute * 60;
-const day = hour * 24;
-
-const dayStaked = 365;
-const stakingAmount = 1000;
-const expectedReturn = 1100;
-
 describe("BillBOSCore", () => {
-  async function bbCompoundAdapterFixture(billBOS: string) {
+  const mockAds = {
+    name: "mockAds1",
+    imageCID: "cid123",
+    newTabLink: "http://localhost:3000",
+    widgetLink: "",
+    isInteractive: false,
+  };
+  async function bbCompoundAdapterFixture(
+    billBOS: string,
+    usdtAddress: string
+  ) {
     const [owner] = await ethers.getSigners();
-    const MockUSDT = await ethers.getContractFactory("MockERC20");
     const MockCompound = await ethers.getContractFactory("MockCompound");
     const BBCompoundAdapter = await ethers.getContractFactory(
       "BBCompoundAdapter"
     );
-
-    const mockUSDT = await MockUSDT.connect(owner).deploy("USDT");
-    await mockUSDT.waitForDeployment();
-    const usdtAddress = await mockUSDT.getAddress();
 
     const mockCompound = await MockCompound.connect(owner).deploy(
       usdtAddress,
@@ -40,119 +37,289 @@ describe("BillBOSCore", () => {
     );
     await bbCompoundAdapter.waitForDeployment();
 
-    await (
-      await mockUSDT
-        .connect(owner)
-        .mint(mockCompoundAddress, ethers.parseEther("10000000"))
-    ).wait();
-
-    await (
-      await mockUSDT.connect(owner).mint(billBOS, ethers.parseEther("1000"))
-    ).wait();
-
-    return { billBOS, mockUSDT, mockCompound, bbCompoundAdapter };
+    return { billBOS, mockCompound, bbCompoundAdapter };
   }
 
-  async function billBOSCoreFixture() {
+  async function billBOSCoreFixture(usdtAddress: string) {
     const [owner] = await ethers.getSigners();
     const BillBOSCore = await ethers.getContractFactory("BillBOSCore");
     const mockInitial = "0xF28cAc2532d77826C725C6092A15E98a50c79FD0";
-    const billBOSCore = await BillBOSCore.connect(owner).deploy(mockInitial);
+    const billBOSCore = await BillBOSCore.connect(owner).deploy(
+      mockInitial,
+      usdtAddress
+    );
     return { owner, billBOSCore };
   }
 
   async function bothFixture() {
-    const { billBOSCore, owner } = await billBOSCoreFixture();
-    const { mockUSDT, mockCompound, bbCompoundAdapter } =
-      await bbCompoundAdapterFixture(await billBOSCore.getAddress());
-    return { billBOSCore, owner, mockUSDT, mockCompound, bbCompoundAdapter };
+    const [owner, player1, player2] = await ethers.getSigners();
+    const MockUSDT = await ethers.getContractFactory("MockERC20");
+    const mockUSDT = await MockUSDT.connect(owner).deploy("USDT");
+    await mockUSDT.waitForDeployment();
+    const usdtAddress = await mockUSDT.getAddress();
+
+    const { billBOSCore } = await billBOSCoreFixture(usdtAddress);
+    const { mockCompound, bbCompoundAdapter } = await bbCompoundAdapterFixture(
+      await billBOSCore.getAddress(),
+      usdtAddress
+    );
+
+    const bbCompoundAdapterAddress = await bbCompoundAdapter.getAddress();
+    await billBOSCore
+      .connect(owner)
+      .setBillbosAdaptorAddress(bbCompoundAdapterAddress);
+
+    await (
+      await mockUSDT
+        .connect(owner)
+        .mint(await mockCompound.getAddress(), ethers.parseEther("10000000"))
+    ).wait();
+
+    await (
+      await mockUSDT
+        .connect(owner)
+        .mint(owner, ethers.parseEther("1000000000000000"))
+    ).wait();
+
+    await (
+      await mockUSDT
+        .connect(owner)
+        .approve(await billBOSCore.getAddress(), ethers.parseEther("10000000"))
+    ).wait();
+
+    return {
+      billBOSCore,
+      owner,
+      mockUSDT,
+      mockCompound,
+      bbCompoundAdapter,
+      player1,
+      player2,
+    };
   }
 
   describe("BillBOSCore Setup", () => {
     it("should be deploy", async () => {
-      await loadFixture(billBOSCoreFixture);
+      await loadFixture(bothFixture);
     });
 
     it("should be connect with bbCompoundAdapter contract", async () => {
-      const { billBOSCore, owner, bbCompoundAdapter } = await loadFixture(
-        bothFixture
-      );
+      const { billBOSCore, owner, bbCompoundAdapter, mockUSDT } =
+        await loadFixture(bothFixture);
       const bbCompoundAdapterAddress = await bbCompoundAdapter.getAddress();
-      await billBOSCore
-        .connect(owner)
-        .setBillbosAdaptorAddress(bbCompoundAdapterAddress);
       expect(await billBOSCore.billbosAdaptorAddress()).to.equal(
         bbCompoundAdapterAddress
+      );
+      expect(await billBOSCore.stakedTokenAddress()).to.equal(
+        await mockUSDT.getAddress()
       );
     });
   });
 
   describe("BillBOSCore Ads", () => {
-    const mockAds = {
-      name: "mockAds1",
-      imageCID: "cid123",
-      newTabLink: "http://localhost:3000",
-      widgetLink: "",
-      isInteractive: false,
-    };
-    describe("BillBOSCore Ads Create", () => {});
-    it("should be create new ads", async () => {
-      const { billBOSCore, owner } = await loadFixture(billBOSCoreFixture);
-      await billBOSCore.connect(owner).createAds(mockAds, 1);
-    });
-    it("should revert if amount is less than 0", async () => {
-      const { billBOSCore, owner } = await loadFixture(billBOSCoreFixture);
+    it("should be reverted adsId doesn't exist", async () => {
+      const { billBOSCore, owner } = await loadFixture(bothFixture);
       await expect(
-        billBOSCore.connect(owner).createAds(mockAds, 0)
-      ).to.be.revertedWith("BillBOSCore: amount must be more than 0");
+        billBOSCore.connect(owner).updateAds(1, mockAds)
+      ).to.be.revertedWith("BillBOSCore: ads does not exist in billbos");
     });
-    it("should be update ads", async () => {});
+    it("should be update ads", async () => {
+      const { billBOSCore, owner } = await loadFixture(bothFixture);
+      await billBOSCore
+        .connect(owner)
+        .createAds(mockAds, ethers.parseEther("10"));
+      const mockAdsUpdate = {
+        name: "mockAds2",
+        imageCID: "cid123",
+        newTabLink: "http://localhost:3000",
+        widgetLink: "",
+        isInteractive: true,
+      };
+      await billBOSCore.connect(owner).updateAds(1, mockAdsUpdate);
+      expect((await billBOSCore.adsContent(1))[0]).to.equal(
+        Object.values(mockAdsUpdate)[0]
+      );
+    });
+    describe("BillBOSCore Ads Create", () => {
+      it("should be create new ads", async () => {
+        const { billBOSCore, owner } = await loadFixture(bothFixture);
+
+        await billBOSCore
+          .connect(owner)
+          .createAds(mockAds, ethers.parseEther("1"));
+        expect(await billBOSCore.adsIdLast()).to.equal(1);
+        expect((await billBOSCore.adsContent(1))[0]).to.equal(
+          Object.values(mockAds)[0]
+        );
+        expect(await billBOSCore.totalStakedBalanceLast()).to.equal(
+          ethers.parseEther("1")
+        );
+        expect(await billBOSCore.adsStakedBalance(1)).to.equal(
+          ethers.parseEther("1")
+        );
+      });
+      it("should revert if amount is less than 0", async () => {
+        const { billBOSCore, owner } = await loadFixture(bothFixture);
+        await expect(
+          billBOSCore.connect(owner).createAds(mockAds, 0)
+        ).to.be.revertedWith("BillBOSCore: amount must be more than 0");
+      });
+    });
   });
 
-  describe("BillBOSCore Boost/Unboost", () => {});
+  describe("BillBOSCore Boost/Unboost", () => {
+    it("should be boost ads", async () => {
+      const { billBOSCore, owner } = await loadFixture(bothFixture);
+      // adsId 1
+      await billBOSCore.connect(owner).createAds(mockAds, 100);
+      // adsId 2
+      await billBOSCore.connect(owner).createAds(mockAds, 50);
+      await billBOSCore.connect(owner).boost(1, 100);
+      expect(await billBOSCore.totalStakedBalanceLast()).to.equal(250);
+      expect(await billBOSCore.adsStakedBalance(1)).to.equal(200);
+    });
+    it("should be unboost ads", async () => {
+      const { billBOSCore, owner } = await loadFixture(bothFixture);
+      // adsId 1
+      await billBOSCore.connect(owner).createAds(mockAds, 100);
+      // adsId 2
+      await billBOSCore.connect(owner).createAds(mockAds, 50);
+      await billBOSCore.connect(owner).unboost(1, 50);
+      expect(await billBOSCore.totalStakedBalanceLast()).to.equal(100);
+      expect(await billBOSCore.adsStakedBalance(1)).to.equal(50);
+    });
+    it("should be reverted if unboost is not enough", async () => {
+      const { billBOSCore, owner } = await loadFixture(bothFixture);
+      // adsId 1
+      await billBOSCore.connect(owner).createAds(mockAds, 100);
+      // adsId 2
+      await billBOSCore.connect(owner).createAds(mockAds, 50);
+      await expect(
+        billBOSCore.connect(owner).unboost(1, 200)
+      ).to.be.revertedWith(
+        "BillBOSCore: this ads is not enough staked balance"
+      );
+    });
+    it("should be unboostAll ads", async () => {
+      const { billBOSCore, owner } = await loadFixture(bothFixture);
+      // adsId 1
+      await billBOSCore.connect(owner).createAds(mockAds, 100);
+      // adsId 2
+      await billBOSCore.connect(owner).createAds(mockAds, 50);
+      await billBOSCore.connect(owner).unboostAll(1);
+      expect(await billBOSCore.totalStakedBalanceLast()).to.equal(50);
+      expect(await billBOSCore.adsStakedBalance(1)).to.equal(0);
+    });
+  });
 
-  describe("BillBOSCore Claim", () => {});
+  describe("BillBOSCore Upload Report", () => {
+    it("should be upload report", async () => {
+      const { billBOSCore, owner } = await loadFixture(bothFixture);
+      await billBOSCore
+        .connect(owner)
+        .createAds(mockAds, ethers.parseEther("1000000"));
+      await billBOSCore
+        .connect(owner)
+        .uploadAdsReport(
+          [
+            "0x9A0d1aEBFfd101c236faA674b3c581dfE4418f9b",
+            "0x400dff6cBa74dc4d69EB7dEE0E37293541607b5F",
+          ],
+          [100, 200],
+          300
+        );
+      expect(await billBOSCore.webpageOwnerIdLast()).to.equal(2);
+      expect(await billBOSCore.monthCount()).to.equal(1);
+    });
+    it("should be index webpage owner is not duplicate", async () => {
+      const { billBOSCore, owner } = await loadFixture(bothFixture);
+      await billBOSCore
+        .connect(owner)
+        .uploadAdsReport(
+          [
+            "0x9A0d1aEBFfd101c236faA674b3c581dfE4418f9b",
+            "0x400dff6cBa74dc4d69EB7dEE0E37293541607b5F",
+          ],
+          [100, 200],
+          300
+        );
+      await billBOSCore
+        .connect(owner)
+        .uploadAdsReport(
+          [
+            "0x9A0d1aEBFfd101c236faA674b3c581dfE4418f9b",
+            "0x400dff6cBa74dc4d69EB7dEE0E37293541607b5F",
+            "0x945b11D39FE18459C890c0e7B95b03D27549ed17",
+          ],
+          [100, 200, 300],
+          600
+        );
+      expect(await billBOSCore.webpageOwnerIdLast()).to.equal(3);
+      expect(await billBOSCore.monthCount()).to.equal(2);
+    });
+    it("should be reverted if length of webpage owner and view count records is not equal", async () => {
+      const { billBOSCore, owner } = await loadFixture(bothFixture);
+      await expect(
+        billBOSCore
+          .connect(owner)
+          .uploadAdsReport(
+            [
+              "0x9A0d1aEBFfd101c236faA674b3c581dfE4418f9b",
+              "0x9A0d1aEBFfd101c236faA674b3c581dfE4418f9b",
+            ],
+            [100, 200, 300],
+            600
+          )
+      ).to.be.revertedWith(
+        "BillBOSCore: length of webpageOwner and count is not equal"
+      );
+    });
+  });
 
-  // it("should work", async () => {
-  //   const { billBOS, mockUSDT, bbCompoundAdapter } = await loadFixture(
-  //     bbCompoundAdapterFixture
-  //   );
+  describe("BillBOSCore Claim", () => {
+    it("should be claim", async () => {
+      // TODO: add when upload success
+      const { billBOSCore, owner, mockUSDT, player1, player2 } =
+        await loadFixture(bothFixture);
 
-  //   const stakeAmount = ethers.parseEther(stakingAmount.toString());
+      const minute = 60;
+      const hour = minute * 60;
+      const day = hour * 24;
+      const dayStaked = 365;
+      const stakingAmount = 1000;
+      const expectedReturn = 1100;
+      const stakeAmount = ethers.parseEther(stakingAmount.toString());
 
-  //   // const usdtBeforeStake = await mockUSDT.balanceOf(billBOS.address);
+      await mockUSDT.connect(owner).mint(player1.address, stakeAmount);
+      await mockUSDT
+        .connect(player1)
+        .approve(await billBOSCore.getAddress(), stakeAmount);
+      await billBOSCore.connect(player1).createAds(mockAds, stakeAmount);
 
-  //   // console.log(
-  //   //   "USDT balance of billBOS (Before Stake): ",
-  //   //   ethers.formatEther(usdtBeforeStake)
-  //   // );
+      await time.increase(dayStaked * day);
 
-  //   await (
-  //     await mockUSDT
-  //       .connect(billBOS)
-  //       .approve(bbCompoundAdapter.getAddress(), stakeAmount)
-  //   ).wait();
+      const player2Address = await player2.getAddress();
 
-  //   await (await bbCompoundAdapter.connect(billBOS).stake(stakeAmount)).wait();
-
-  //   await time.increase(dayStaked * day);
-
-  //   const balanceInMockCompoundAfter =
-  //     await bbCompoundAdapter.getStakedBalance();
-
-  //   await (
-  //     await bbCompoundAdapter
-  //       .connect(billBOS)
-  //       .unstake(balanceInMockCompoundAfter)
-  //   ).wait();
-
-  //   const usdtAfterStake = await mockUSDT.balanceOf(billBOS.address);
-
-  //   // console.log(
-  //   //   "USDT balance of billBOS (After UnStake): ",
-  //   //   ethers.formatEther(usdtAfterStake)
-  //   // );
-
-  //   expect(+ethers.formatEther(usdtAfterStake)).to.equal(expectedReturn);
-  // });
+      await billBOSCore
+        .connect(owner)
+        .uploadAdsReport(
+          [player2Address, "0x400dff6cBa74dc4d69EB7dEE0E37293541607b5F"],
+          [100, 100],
+          200
+        );
+      console.log(
+        ethers.formatEther((await billBOSCore.getReward(player2Address))[0])
+      );
+      console.log(
+        ethers.formatEther(await billBOSCore.totalEarningBalanceLast())
+      );
+    });
+    it("should be reverted if claim is not enough", async () => {
+      const { billBOSCore, owner } = await loadFixture(bothFixture);
+      billBOSCore.connect(owner).createAds(mockAds, 100);
+      await expect(billBOSCore.connect(owner).claimReward()).to.be.revertedWith(
+        "BillBOSCore: this webpageOwner is not enough reward"
+      );
+    });
+  });
 });

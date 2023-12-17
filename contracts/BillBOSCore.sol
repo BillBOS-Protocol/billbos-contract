@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./interfaces/IBillBOSCore.sol";
 import "./interfaces/IBBAdapter.sol";
@@ -9,11 +10,13 @@ import "./interfaces/IBBAdapter.sol";
 contract BillBOSCore is IBillBOSCore, Ownable {
     // State
     address public billbosAdaptorAddress;
+    address public stakedTokenAddress;
     uint256 public monthCount = 0;
     uint256 public adsIdLast = 0;
     uint256 public webpageOwnerIdLast = 0; // start from 1
     uint256 public totalStakedBalanceLast = 0;
     uint256 public totalEarningBalanceLast = 0;
+    uint256 public platformBalance = 0;
     mapping(address => uint256[]) public adsId; // adsOwner -> adsId
     mapping(uint256 => AdsContent) public adsContent; // adsId -> AdsContent
     mapping(uint256 => uint256) public adsStakedBalance; // adsId -> stakedBalance
@@ -21,8 +24,12 @@ contract BillBOSCore is IBillBOSCore, Ownable {
     mapping(uint256 => MonthlyResult) private monthResult; // month -> viewCount and reward
     mapping(address => uint256) private webpageOwnerId; //  webpageOwner -> webpageOwnerId
 
-    constructor(address _billbosAdaptorAddress) Ownable(msg.sender) {
+    constructor(
+        address _billbosAdaptorAddress,
+        address _stakedTokenAddress
+    ) Ownable(msg.sender) {
         billbosAdaptorAddress = _billbosAdaptorAddress;
+        stakedTokenAddress = _stakedTokenAddress;
     }
 
     // Method: Modifier
@@ -88,6 +95,8 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         adsContent[_adsIdLast] = _ads;
         _boost(_amount);
         adsStakedBalance[_adsIdLast] = _amount;
+        totalStakedBalanceLast += _amount;
+        adsIdLast = _adsIdLast;
     }
 
     function updateAds(
@@ -108,11 +117,18 @@ contract BillBOSCore is IBillBOSCore, Ownable {
     }
 
     function _boost(uint256 _amount) internal {
+        IERC20(stakedTokenAddress).approve(billbosAdaptorAddress, _amount);
+        IERC20(stakedTokenAddress).transferFrom(
+            msg.sender,
+            address(this),
+            _amount
+        );
         IBBAdapter(billbosAdaptorAddress).stake(_amount);
     }
 
     function _unboost(uint256 _amount) internal {
         IBBAdapter(billbosAdaptorAddress).unstake(_amount);
+        IERC20(stakedTokenAddress).transfer(msg.sender, _amount);
     }
 
     function boost(
@@ -120,9 +136,8 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         uint256 _amount
     ) external adsIdExist(_adsId) {
         _boost(_amount);
-        uint256 newAdsStakedBalance = adsStakedBalance[_adsId] + _amount;
         totalStakedBalanceLast += _amount;
-        adsStakedBalance[_adsId] = newAdsStakedBalance;
+        adsStakedBalance[_adsId] += _amount;
     }
 
     function unboost(
@@ -134,9 +149,8 @@ contract BillBOSCore is IBillBOSCore, Ownable {
             "BillBOSCore: this ads is not enough staked balance"
         );
         _unboost(_amount);
-        uint256 newAdsStakedBalance = adsStakedBalance[_adsId] - _amount;
         totalStakedBalanceLast -= _amount;
-        adsStakedBalance[_adsId] = newAdsStakedBalance;
+        adsStakedBalance[_adsId] -= _amount;
     }
 
     function unboostAll(uint256 _adsId) external adsIdExist(_adsId) {
@@ -153,7 +167,6 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         uint256 _monthClaimedReward = monthClaimedReward[_webpageOwner];
         uint256 _monthCount = monthCount;
         uint256 reward = 0;
-        // FIXME: add % of dev reward -> 5%
         for (uint256 i = _monthClaimedReward; i < _monthCount; i++) {
             MonthlyResult memory _monthResult = monthResult[i];
             if (webpageOwnerId[_webpageOwner] != 0) {
@@ -182,7 +195,7 @@ contract BillBOSCore is IBillBOSCore, Ownable {
             reward > 0,
             "BillBOSCore: this webpageOwner is not enough reward"
         );
-        IBBAdapter(billbosAdaptorAddress).unstake(reward);
+        _unboost(reward);
         monthClaimedReward[msg.sender] = monthCount;
     }
 
@@ -190,20 +203,21 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         address[] calldata _webpageOwner,
         uint256[] calldata _viewCount,
         uint256 _totalViewCount
-    ) external onlyOwner returns (uint256 _monthCount) {
+    ) external onlyOwner returns (uint256) {
         require(
             _webpageOwner.length == _viewCount.length,
             "BillBOSCore: length of webpageOwner and count is not equal"
         );
-        _monthCount = monthCount + 1;
-        uint256 reward = IBBAdapter(billbosAdaptorAddress)
-            .getStakedBalance() -
+        uint256 _monthCount = monthCount;
+        uint256 reward = IBBAdapter(billbosAdaptorAddress).getStakedBalance() -
             totalStakedBalanceLast -
             totalEarningBalanceLast;
+        // TODO: set fee 50% to platform and webpage owner
+        platformBalance += reward / 2;
         monthResult[_monthCount] = MonthlyResult({
             webpageOwner: _webpageOwner,
             viewCount: _viewCount,
-            reward: reward,
+            reward: reward - reward / 2,
             totalViewCount: _totalViewCount
         });
         totalEarningBalanceLast += reward;
@@ -211,6 +225,7 @@ contract BillBOSCore is IBillBOSCore, Ownable {
             webpageOwnerIdLast += 1;
             webpageOwnerId[_webpageOwner[i]] = i + 1;
         }
+        monthCount = _monthCount + 1;
         return _monthCount;
     }
 }

@@ -25,15 +25,6 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        version: "0.8.20",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
-      {
         version: "0.8.0",
         settings: {
           optimizer: {
@@ -45,6 +36,10 @@ const config: HardhatUserConfig = {
     ],
   },
   networks: {
+    "bsc-testnet": {
+      url: process.env.URL_BSC_TESTNET || "",
+      accounts: getAccounts(),
+    },
     "jfin-testnet": {
       url: process.env.URL_JFIN_TESTNET || "",
       accounts: getAccounts(),

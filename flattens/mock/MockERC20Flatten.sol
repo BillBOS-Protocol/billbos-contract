@@ -1,11 +1,11 @@
 // Sources flattened with hardhat v2.19.2 https://hardhat.org
 
-// SPDX-License-Identifier: MIT AND UNLICENSED
+// SPDX-License-Identifier: MIT
 
-// File @openzeppelin/contracts/utils/Context.sol@v5.0.1
+// File @openzeppelin/contracts/utils/Context.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
-// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)
+// OpenZeppelin Contracts (last updated v5.0.0) (utils/Context.sol)
 
 pragma solidity ^0.8.20;
 
@@ -27,14 +27,10 @@ abstract contract Context {
     function _msgData() internal view virtual returns (bytes calldata) {
         return msg.data;
     }
-
-    function _contextSuffixLength() internal view virtual returns (uint256) {
-        return 0;
-    }
 }
 
 
-// File @openzeppelin/contracts/access/Ownable.sol@v5.0.1
+// File @openzeppelin/contracts/access/Ownable.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)
@@ -136,7 +132,7 @@ abstract contract Ownable is Context {
 }
 
 
-// File @openzeppelin/contracts/interfaces/draft-IERC6093.sol@v5.0.1
+// File @openzeppelin/contracts/interfaces/draft-IERC6093.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (interfaces/draft-IERC6093.sol)
@@ -301,7 +297,7 @@ interface IERC1155Errors {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/IERC20.sol@v5.0.1
+// File @openzeppelin/contracts/token/ERC20/IERC20.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/IERC20.sol)
@@ -384,7 +380,7 @@ interface IERC20 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v5.0.1
+// File @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/extensions/IERC20Metadata.sol)
@@ -412,7 +408,7 @@ interface IERC20Metadata is IERC20 {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/ERC20.sol@v5.0.1
+// File @openzeppelin/contracts/token/ERC20/ERC20.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/ERC20.sol)
@@ -730,7 +726,7 @@ abstract contract ERC20 is Context, IERC20, IERC20Metadata, IERC20Errors {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol@v5.0.1
+// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/extensions/ERC20Burnable.sol)
@@ -771,7 +767,7 @@ abstract contract ERC20Burnable is Context, ERC20 {
 }
 
 
-// File @openzeppelin/contracts/utils/Pausable.sol@v5.0.1
+// File @openzeppelin/contracts/utils/Pausable.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/Pausable.sol)
@@ -892,7 +888,7 @@ abstract contract Pausable is Context {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol@v5.0.1
+// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/extensions/ERC20Pausable.sol)
@@ -927,7 +923,7 @@ abstract contract ERC20Pausable is ERC20, Pausable {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol@v5.0.1
+// File @openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/extensions/IERC20Permit.sol)
@@ -1021,7 +1017,7 @@ interface IERC20Permit {
 }
 
 
-// File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v5.0.1
+// File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/cryptography/ECDSA.sol)
@@ -1199,7 +1195,7 @@ library ECDSA {
 }
 
 
-// File @openzeppelin/contracts/interfaces/IERC5267.sol@v5.0.1
+// File @openzeppelin/contracts/interfaces/IERC5267.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (interfaces/IERC5267.sol)
@@ -1231,7 +1227,7 @@ interface IERC5267 {
 }
 
 
-// File @openzeppelin/contracts/utils/math/Math.sol@v5.0.1
+// File @openzeppelin/contracts/utils/math/Math.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/math/Math.sol)
@@ -1650,7 +1646,7 @@ library Math {
 }
 
 
-// File @openzeppelin/contracts/utils/math/SignedMath.sol@v5.0.1
+// File @openzeppelin/contracts/utils/math/SignedMath.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/math/SignedMath.sol)
@@ -1697,7 +1693,7 @@ library SignedMath {
 }
 
 
-// File @openzeppelin/contracts/utils/Strings.sol@v5.0.1
+// File @openzeppelin/contracts/utils/Strings.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/Strings.sol)
@@ -1793,7 +1789,7 @@ library Strings {
 }
 
 
-// File @openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol@v5.0.1
+// File @openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/cryptography/MessageHashUtils.sol)
@@ -1881,7 +1877,7 @@ library MessageHashUtils {
 }
 
 
-// File @openzeppelin/contracts/utils/StorageSlot.sol@v5.0.1
+// File @openzeppelin/contracts/utils/StorageSlot.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/StorageSlot.sol)
@@ -2020,7 +2016,7 @@ library StorageSlot {
 }
 
 
-// File @openzeppelin/contracts/utils/ShortStrings.sol@v5.0.1
+// File @openzeppelin/contracts/utils/ShortStrings.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/ShortStrings.sol)
@@ -2145,7 +2141,7 @@ library ShortStrings {
 }
 
 
-// File @openzeppelin/contracts/utils/cryptography/EIP712.sol@v5.0.1
+// File @openzeppelin/contracts/utils/cryptography/EIP712.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/cryptography/EIP712.sol)
@@ -2307,7 +2303,7 @@ abstract contract EIP712 is IERC5267 {
 }
 
 
-// File @openzeppelin/contracts/utils/Nonces.sol@v5.0.1
+// File @openzeppelin/contracts/utils/Nonces.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/Nonces.sol)
@@ -2357,7 +2353,7 @@ abstract contract Nonces {
 }
 
 
-// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol@v5.0.1
+// File @openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol@v5.0.0
 
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/extensions/ERC20Permit.sol)
@@ -2444,8 +2440,8 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712, Nonces {
 
 // File contracts/mock/MockERC20.sol
 
-// Original license: SPDX_License_Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+// Original license: SPDX_License_Identifier: MIT
+pragma solidity ^0.8.20;
 
 
 

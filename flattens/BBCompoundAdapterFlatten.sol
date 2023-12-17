@@ -17,6 +17,7 @@ interface IBBAdapter {
     function getStakedBalance() external view returns (uint256);
 }
 
+
 // File contracts/interfaces/ICErc20.sol
 
 // Original license: SPDX_License_Identifier: UNLICENSED
@@ -29,6 +30,7 @@ interface ICErc20 {
 
     function balanceOfUnderlying(address owner) external view returns (uint256);
 }
+
 
 // File contracts/interfaces/IERC20.sol
 
@@ -52,12 +54,15 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
+
 // File contracts/BBCompoundAdapter.sol
 
 // Original license: SPDX_License_Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 // Import Compound's interfaces
+
+
 
 contract BBCompoundAdapter is IBBAdapter {
     address public billBOS;
