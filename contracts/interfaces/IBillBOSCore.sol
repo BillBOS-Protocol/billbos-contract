@@ -15,26 +15,19 @@ interface IBillBOSCore {
         uint256 reward;
         uint256 totalViewCount;
     }
-    struct ViewCount {
-        address webpageOwner;
-        uint256 count;
-    }
     struct AdsRes {
+        uint256 adsId;
         AdsContent adsContent;
         uint256 adsStakedBalance;
     }
 
     // State
-    function RANKING_LENGTH() external view returns (uint8);
-
     function billbosAdaptorAddress() external view returns (address);
 
     // Method Getter-Setter
-    function top10Ads() external view returns (AdsRes[] memory);
-
     function getAdsUser(address _ader) external view returns (AdsRes[] memory);
 
-    function getClaimUser(
+    function getReward(
         address _webpageOwner
     ) external view returns (uint256, uint256);
 
@@ -48,8 +41,6 @@ interface IBillBOSCore {
 
     function updateAds(uint256 _adsId, AdsContent calldata _ads) external;
 
-    function hideAds(uint256 _adsId) external;
-
     function boost(uint256 _adsId, uint256 _amount) external;
 
     function unboost(uint256 _adsId, uint256 _amount) external;
@@ -61,7 +52,6 @@ interface IBillBOSCore {
     function uploadAdsReport(
         address[] calldata _webpageOwner,
         uint256[] calldata _viewCount,
-        uint256 _reward,
         uint256 _totalViewCount
     ) external returns (uint256);
 

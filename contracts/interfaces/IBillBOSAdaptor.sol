@@ -1,8 +1,12 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
 
 interface IBillBOSAdaptor {
-    function stake(uint256 amount) external;
-    function unstake(address receiver, uint256 amount) external;
-    function claimReward(address recevier, uint256 amount) external;
+    function setBillBOS(address _newBillBOS) external;
+
+    function stake(uint256 _amount) external;
+
+    function unstake(uint256 _amount) external;
+
+    function getStakedBalance() external view returns (uint256);
 }

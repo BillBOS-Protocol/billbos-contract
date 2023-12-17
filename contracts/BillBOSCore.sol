@@ -9,15 +9,17 @@ import "./interfaces/IBillBOSAdaptor.sol";
 contract BillBOSCore is IBillBOSCore, Ownable {
     // State
     address public billbosAdaptorAddress;
-    uint8 public constant RANKING_LENGTH = 10;
     uint256 public monthCount = 0;
     uint256 public adsIdLast = 0;
-    mapping(address => uint256[]) public adsId; // aders -> adsId
+    uint256 public webpageOwnerIdLast = 0; // start from 1
+    uint256 public totalStakedBalanceLast = 0;
+    uint256 public totalEarningBalanceLast = 0;
+    mapping(address => uint256[]) public adsId; // adsOwner -> adsId
     mapping(uint256 => AdsContent) public adsContent; // adsId -> AdsContent
     mapping(uint256 => uint256) public adsStakedBalance; // adsId -> stakedBalance
-    mapping(address => uint256) public monthClaimedReward; // webpageOwner(encoded) -> claimedReward
-    mapping(uint256 => MonthlyResult) public monthResult; // month -> viewCount and reward
-    uint256[RANKING_LENGTH] public rankingAdsId;
+    mapping(address => uint256) public monthClaimedReward; // webpageOwner -> claimedReward
+    mapping(uint256 => MonthlyResult) private monthResult; // month -> viewCount and reward
+    mapping(address => uint256) private webpageOwnerId; //  webpageOwner -> webpageOwnerId
 
     constructor(address _billbosAdaptorAddress) Ownable(msg.sender) {
         billbosAdaptorAddress = _billbosAdaptorAddress;
@@ -33,22 +35,15 @@ contract BillBOSCore is IBillBOSCore, Ownable {
     }
 
     // Method: Getter-Setter
-    function top10Ads() external view returns (AdsRes[] memory) {
-        AdsRes[] memory adsContentTop10 = new AdsRes[](RANKING_LENGTH);
-        for (uint8 i = 0; i < RANKING_LENGTH; i++) {
-            adsContentTop10[i] = AdsRes({
-                adsContent: adsContent[rankingAdsId[i]],
-                adsStakedBalance: adsStakedBalance[rankingAdsId[i]]
-            });
-        }
-        return adsContentTop10;
-    }
 
-    function getAdsUser(address _ader) external view returns (AdsRes[] memory) {
-        uint256[] memory myAdsId = adsId[_ader];
+    function getAdsUser(
+        address _adsOwner
+    ) external view returns (AdsRes[] memory) {
+        uint256[] memory myAdsId = adsId[_adsOwner];
         AdsRes[] memory myAds = new AdsRes[](myAdsId.length);
         for (uint256 i = 0; i < myAdsId.length; i++) {
             myAds[i] = AdsRes({
+                adsId: myAdsId[i],
                 adsContent: adsContent[myAdsId[i]],
                 adsStakedBalance: adsStakedBalance[myAdsId[i]]
             });
@@ -56,7 +51,7 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         return myAds;
     }
 
-    function getClaimUser(
+    function getReward(
         address _webpageOwner
     ) external view returns (uint256, uint256) {
         uint256 reward = _claimReward(_webpageOwner);
@@ -69,19 +64,30 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         billbosAdaptorAddress = _billbosAdaptorAddress;
     }
 
+    function getAds() external view returns (AdsRes[] memory) {
+        AdsRes[] memory ads = new AdsRes[](adsIdLast);
+        for (uint256 i = 0; i < adsIdLast; i++) {
+            if (adsStakedBalance[i] <= 0) continue;
+            ads[i] = AdsRes({
+                adsId: i,
+                adsContent: adsContent[i],
+                adsStakedBalance: adsStakedBalance[i]
+            });
+        }
+        return ads;
+    }
+
     // Method: Process
     function createAds(
         AdsContent calldata _ads,
         uint256 _amount
     ) external returns (uint256 _adsIdLast) {
+        require(_amount > 0, "BillBOSCore: amount must be more than 0");
         _adsIdLast = adsIdLast + 1;
         adsId[msg.sender].push(_adsIdLast);
         adsContent[_adsIdLast] = _ads;
-        if (_amount > 0) {
-            _boost(_amount);
-            adsStakedBalance[_adsIdLast] = _amount;
-            sortAds(_adsIdLast, _amount);
-        }
+        _boost(_amount);
+        adsStakedBalance[_adsIdLast] = _amount;
     }
 
     function updateAds(
@@ -101,30 +107,12 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         }
     }
 
-    // TODO: hide ads from billbosAdaptorAddress
-    function hideAds(uint256 _adsId) external adsIdExist(_adsId) {}
-
-    function sortAds(
-        uint256 _adsId,
-        uint256 _amount
-    ) internal adsIdExist(_adsId) {
-        uint256[RANKING_LENGTH] memory _rankingAdsId = rankingAdsId;
-        uint256[RANKING_LENGTH] memory newRankingAdsId;
-
-        for (uint256 i = 0; i < _rankingAdsId.length; i++) {
-            if (adsStakedBalance[_rankingAdsId[i]] < _amount) {
-                newRankingAdsId[i] = _adsId;
-                newRankingAdsId[i + 1] = _rankingAdsId[i];
-                i = i + 1;
-            } else {
-                newRankingAdsId[i] = _rankingAdsId[i];
-            }
-        }
-        rankingAdsId = newRankingAdsId;
-    }
-
     function _boost(uint256 _amount) internal {
         IBillBOSAdaptor(billbosAdaptorAddress).stake(_amount);
+    }
+
+    function _unboost(uint256 _amount) internal {
+        IBillBOSAdaptor(billbosAdaptorAddress).unstake(_amount);
     }
 
     function boost(
@@ -133,12 +121,8 @@ contract BillBOSCore is IBillBOSCore, Ownable {
     ) external adsIdExist(_adsId) {
         _boost(_amount);
         uint256 newAdsStakedBalance = adsStakedBalance[_adsId] + _amount;
+        totalStakedBalanceLast += _amount;
         adsStakedBalance[_adsId] = newAdsStakedBalance;
-        sortAds(_adsId, newAdsStakedBalance);
-    }
-
-    function _unboost(uint256 _amount) internal {
-        IBillBOSAdaptor(billbosAdaptorAddress).unstake(msg.sender, _amount);
     }
 
     function unboost(
@@ -151,8 +135,8 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         );
         _unboost(_amount);
         uint256 newAdsStakedBalance = adsStakedBalance[_adsId] - _amount;
+        totalStakedBalanceLast -= _amount;
         adsStakedBalance[_adsId] = newAdsStakedBalance;
-        sortAds(_adsId, newAdsStakedBalance);
     }
 
     function unboostAll(uint256 _adsId) external adsIdExist(_adsId) {
@@ -161,7 +145,7 @@ contract BillBOSCore is IBillBOSCore, Ownable {
             "BillBOSCore: this ads is not enough staked balance"
         );
         _unboost(adsStakedBalance[_adsId]);
-        sortAds(_adsId, 0);
+        totalStakedBalanceLast -= adsStakedBalance[_adsId];
         adsStakedBalance[_adsId] = 0;
     }
 
@@ -169,8 +153,18 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         uint256 _monthClaimedReward = monthClaimedReward[_webpageOwner];
         uint256 _monthCount = monthCount;
         uint256 reward = 0;
+        // FIXME: add % of dev reward -> 5%
         for (uint256 i = _monthClaimedReward; i < _monthCount; i++) {
             MonthlyResult memory _monthResult = monthResult[i];
+            if (webpageOwnerId[_webpageOwner] != 0) {
+                reward +=
+                    (_monthResult.reward *
+                        _monthResult.viewCount[
+                            webpageOwnerId[_webpageOwner] - 1
+                        ]) /
+                    _monthResult.totalViewCount;
+                continue;
+            }
             for (uint256 j = 0; j < _monthResult.webpageOwner.length; j++) {
                 if (_monthResult.webpageOwner[j] == _webpageOwner) {
                     reward +=
@@ -188,14 +182,13 @@ contract BillBOSCore is IBillBOSCore, Ownable {
             reward > 0,
             "BillBOSCore: this webpageOwner is not enough reward"
         );
-        IBillBOSAdaptor(billbosAdaptorAddress).claimReward(msg.sender, reward);
+        IBillBOSAdaptor(billbosAdaptorAddress).unstake(reward);
         monthClaimedReward[msg.sender] = monthCount;
     }
 
     function uploadAdsReport(
         address[] calldata _webpageOwner,
         uint256[] calldata _viewCount,
-        uint256 _reward,
         uint256 _totalViewCount
     ) external onlyOwner returns (uint256 _monthCount) {
         require(
@@ -203,12 +196,21 @@ contract BillBOSCore is IBillBOSCore, Ownable {
             "BillBOSCore: length of webpageOwner and count is not equal"
         );
         _monthCount = monthCount + 1;
+        uint256 reward = IBillBOSAdaptor(billbosAdaptorAddress)
+            .getStakedBalance() -
+            totalStakedBalanceLast -
+            totalEarningBalanceLast;
         monthResult[_monthCount] = MonthlyResult({
             webpageOwner: _webpageOwner,
             viewCount: _viewCount,
-            reward: _reward,
+            reward: reward,
             totalViewCount: _totalViewCount
         });
+        totalEarningBalanceLast += reward;
+        for (uint256 i = webpageOwnerIdLast; i < _webpageOwner.length; i++) {
+            webpageOwnerIdLast += 1;
+            webpageOwnerId[_webpageOwner[i]] = i + 1;
+        }
         return _monthCount;
     }
 }
