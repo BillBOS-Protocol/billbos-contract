@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./interfaces/IBillBOSCore.sol";
-import "./interfaces/IBillBOSAdaptor.sol";
+import "./interfaces/IBBAdapter.sol";
 
 contract BillBOSCore is IBillBOSCore, Ownable {
     // State
@@ -108,11 +108,11 @@ contract BillBOSCore is IBillBOSCore, Ownable {
     }
 
     function _boost(uint256 _amount) internal {
-        IBillBOSAdaptor(billbosAdaptorAddress).stake(_amount);
+        IBBAdapter(billbosAdaptorAddress).stake(_amount);
     }
 
     function _unboost(uint256 _amount) internal {
-        IBillBOSAdaptor(billbosAdaptorAddress).unstake(_amount);
+        IBBAdapter(billbosAdaptorAddress).unstake(_amount);
     }
 
     function boost(
@@ -182,7 +182,7 @@ contract BillBOSCore is IBillBOSCore, Ownable {
             reward > 0,
             "BillBOSCore: this webpageOwner is not enough reward"
         );
-        IBillBOSAdaptor(billbosAdaptorAddress).unstake(reward);
+        IBBAdapter(billbosAdaptorAddress).unstake(reward);
         monthClaimedReward[msg.sender] = monthCount;
     }
 
@@ -196,7 +196,7 @@ contract BillBOSCore is IBillBOSCore, Ownable {
             "BillBOSCore: length of webpageOwner and count is not equal"
         );
         _monthCount = monthCount + 1;
-        uint256 reward = IBillBOSAdaptor(billbosAdaptorAddress)
+        uint256 reward = IBBAdapter(billbosAdaptorAddress)
             .getStakedBalance() -
             totalStakedBalanceLast -
             totalEarningBalanceLast;

@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 interface IBillBOSCore {
     // Struct
     struct AdsContent {
+        string name;
         string imageCID;
         string newTabLink;
         string widgetLink;

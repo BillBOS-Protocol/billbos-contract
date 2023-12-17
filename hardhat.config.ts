@@ -45,10 +45,14 @@ const config: HardhatUserConfig = {
     ],
   },
   networks: {
-    "bsc-testnet": {
-      url: process.env.URL_BSC_TESTNET || "",
+    "jfin-testnet": {
+      url: process.env.URL_JFIN_TESTNET || "",
       accounts: getAccounts(),
     },
+    "bkc-testnet": {
+      url: process.env.URL_BKC_TESTNET || "",
+      accounts: getAccounts(),
+    }
   },
   gasReporter: {
     enabled: process.env.GAS_REPORT === "true",
