@@ -40,6 +40,14 @@ const config: HardhatUserConfig = {
       url: process.env.URL_BSC_TESTNET || "",
       accounts: getAccounts(),
     },
+    "jfin-testnet": {
+      url: process.env.URL_JFIN_TESTNET || "",
+      accounts: getAccounts(),
+    },
+    "bkc-testnet": {
+      url: process.env.URL_BKC_TESTNET || "",
+      accounts: getAccounts(),
+    }
   },
   gasReporter: {
     enabled: process.env.GAS_REPORT === "true",
