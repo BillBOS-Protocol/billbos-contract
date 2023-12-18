@@ -88,15 +88,16 @@ contract BillBOSCore is IBillBOSCore, Ownable {
     function createAds(
         AdsContent calldata _ads,
         uint256 _amount
-    ) external returns (uint256 _adsIdLast) {
+    ) external returns (uint256) {
         require(_amount > 0, "BillBOSCore: amount must be more than 0");
-        _adsIdLast = adsIdLast + 1;
+        uint256 _adsIdLast = adsIdLast;
         adsId[msg.sender].push(_adsIdLast);
         adsContent[_adsIdLast] = _ads;
         _boost(_amount);
         adsStakedBalance[_adsIdLast] = _amount;
         totalStakedBalanceLast += _amount;
-        adsIdLast = _adsIdLast;
+        adsIdLast = _adsIdLast + 1;
+        return adsIdLast;
     }
 
     function updateAds(
@@ -223,7 +224,7 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         totalEarningBalanceLast += reward;
         for (uint256 i = webpageOwnerIdLast; i < _webpageOwner.length; i++) {
             webpageOwnerIdLast += 1;
-            webpageOwnerId[_webpageOwner[i]] = i + 1;
+            webpageOwnerId[_webpageOwner[i]] = webpageOwnerIdLast;
         }
         monthCount = _monthCount + 1;
         return _monthCount;
