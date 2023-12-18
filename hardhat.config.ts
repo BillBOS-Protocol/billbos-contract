@@ -18,6 +18,10 @@ const config: HardhatUserConfig = {
     ],
   },
   networks: {
+    "j2o-taro": {
+      url: process.env.URL_J2O_TARO || "",
+      accounts: getAccounts(),
+    },
     "bsc-testnet": {
       url: process.env.URL_BSC_TESTNET || "",
       accounts: getAccounts(),
@@ -29,7 +33,7 @@ const config: HardhatUserConfig = {
     "bkc-testnet": {
       url: process.env.URL_BKC_TESTNET || "",
       accounts: getAccounts(),
-    }
+    },
   },
   gasReporter: {
     enabled: process.env.GAS_REPORT === "true",
