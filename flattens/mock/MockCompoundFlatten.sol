@@ -1,8 +1,49 @@
-// SPDX-License-Identifier: MIT
+// Sources flattened with hardhat v2.19.2 https://hardhat.org
+
+// SPDX-License-Identifier: MIT AND UNLICENSED
+
+// File contracts/interfaces/ICErc20.sol
+
+// Original license: SPDX_License_Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+
+interface ICErc20 {
+    function mint(uint256 mintAmount) external returns (uint);
+
+    function redeemUnderlying(uint redeemAmount) external returns (uint);
+
+    function balanceOfUnderlying(address owner) external view returns (uint256);
+}
+
+
+// File contracts/interfaces/IERC20.sol
+
+// Original license: SPDX_License_Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+
+interface IERC20 {
+    function approve(address spender, uint256 amount) external returns (bool);
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+
+    function balanceOf(address account) external view returns (uint256);
+}
+
+
+// File contracts/mock/MockCompund.sol
+
+// Original license: SPDX_License_Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "../interfaces/IERC20.sol";
-import "../interfaces/ICErc20.sol";
 
 contract MockCompound is ICErc20 {
     IERC20 public token;
