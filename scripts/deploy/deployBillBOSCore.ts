@@ -7,7 +7,7 @@ export async function deployBillBOSCore(tokenAddress?: string) {
 
   const BillBOSCore = await ethers.getContractFactory("BillBOSCore", owner);
   const billBOSAdapterAddress =
-    getAddress("billBOSAdapter") ??
+    getAddress("bBCompoundAdapter") ??
     "0x0165878A594ca255338adfa4d48449f69242Eb8F";
   const _tokenAddress = tokenAddress ?? getAddress("mockERC20");
   if (!_tokenAddress) {

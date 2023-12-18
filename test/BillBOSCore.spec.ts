@@ -133,10 +133,10 @@ describe("BillBOSCore", () => {
         imageCID: "cid123",
         newTabLink: "http://localhost:3000",
         widgetLink: "",
-        isInteractive: true,
+        isInteractive: false,
       };
-      await billBOSCore.connect(owner).updateAds(1, mockAdsUpdate);
-      expect((await billBOSCore.adsContent(1))[0]).to.equal(
+      await billBOSCore.connect(owner).updateAds(0, mockAdsUpdate);
+      expect((await billBOSCore.adsContent(0))[0]).to.equal(
         Object.values(mockAdsUpdate)[0]
       );
     });
@@ -148,13 +148,13 @@ describe("BillBOSCore", () => {
           .connect(owner)
           .createAds(mockAds, ethers.parseEther("1"));
         expect(await billBOSCore.adsIdLast()).to.equal(1);
-        expect((await billBOSCore.adsContent(1))[0]).to.equal(
+        expect((await billBOSCore.adsContent(0))[0]).to.equal(
           Object.values(mockAds)[0]
         );
         expect(await billBOSCore.totalStakedBalanceLast()).to.equal(
           ethers.parseEther("1")
         );
-        expect(await billBOSCore.adsStakedBalance(1)).to.equal(
+        expect(await billBOSCore.adsStakedBalance(0)).to.equal(
           ethers.parseEther("1")
         );
       });
@@ -174,9 +174,9 @@ describe("BillBOSCore", () => {
       await billBOSCore.connect(owner).createAds(mockAds, 100);
       // adsId 2
       await billBOSCore.connect(owner).createAds(mockAds, 50);
-      await billBOSCore.connect(owner).boost(1, 100);
+      await billBOSCore.connect(owner).boost(0, 100);
       expect(await billBOSCore.totalStakedBalanceLast()).to.equal(250);
-      expect(await billBOSCore.adsStakedBalance(1)).to.equal(200);
+      expect(await billBOSCore.adsStakedBalance(0)).to.equal(200);
     });
     it("should be unboost ads", async () => {
       const { billBOSCore, owner } = await loadFixture(bothFixture);
@@ -184,9 +184,9 @@ describe("BillBOSCore", () => {
       await billBOSCore.connect(owner).createAds(mockAds, 100);
       // adsId 2
       await billBOSCore.connect(owner).createAds(mockAds, 50);
-      await billBOSCore.connect(owner).unboost(1, 50);
+      await billBOSCore.connect(owner).unboost(0, 50);
       expect(await billBOSCore.totalStakedBalanceLast()).to.equal(100);
-      expect(await billBOSCore.adsStakedBalance(1)).to.equal(50);
+      expect(await billBOSCore.adsStakedBalance(0)).to.equal(50);
     });
     it("should be reverted if unboost is not enough", async () => {
       const { billBOSCore, owner } = await loadFixture(bothFixture);
@@ -195,7 +195,7 @@ describe("BillBOSCore", () => {
       // adsId 2
       await billBOSCore.connect(owner).createAds(mockAds, 50);
       await expect(
-        billBOSCore.connect(owner).unboost(1, 200)
+        billBOSCore.connect(owner).unboost(0, 200)
       ).to.be.revertedWith(
         "BillBOSCore: this ads is not enough staked balance"
       );
@@ -206,9 +206,9 @@ describe("BillBOSCore", () => {
       await billBOSCore.connect(owner).createAds(mockAds, 100);
       // adsId 2
       await billBOSCore.connect(owner).createAds(mockAds, 50);
-      await billBOSCore.connect(owner).unboostAll(1);
+      await billBOSCore.connect(owner).unboostAll(0);
       expect(await billBOSCore.totalStakedBalanceLast()).to.equal(50);
-      expect(await billBOSCore.adsStakedBalance(1)).to.equal(0);
+      expect(await billBOSCore.adsStakedBalance(0)).to.equal(0);
     });
   });
 
