@@ -1,3 +1,4 @@
+import { ethers } from "hardhat";
 import { deployBBCompoundAdapter } from "./deployBBCompoundAdapter";
 import { deployBillBOSCore } from "./deployBillBOSCore";
 import { deployMockCompound } from "./mock/deployMockCompound";
@@ -9,6 +10,7 @@ async function main() {
   const billBOSCore = await deployBillBOSCore();
   const bBCompoundAdapter = await deployBBCompoundAdapter();
   await billBOSCore.setBillbosAdaptorAddress(await bBCompoundAdapter.getAddress());
+  // await mockERC20.mint(await mockCompound.getAddress(), ethers.parseEther("1000000"));
 }
 
 // We recommend this pattern to be able to use async/await everywhere

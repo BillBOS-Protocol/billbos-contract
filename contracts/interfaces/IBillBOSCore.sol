@@ -56,5 +56,7 @@ interface IBillBOSCore {
         uint256 _totalViewCount
     ) external returns (uint256);
 
+    function claimPlatformReward() external;
+
     // Event
 }

@@ -218,7 +218,7 @@ interface IERC20 {
 // File contracts/interfaces/IBBAdapter.sol
 
 // Original license: SPDX_License_Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 interface IBBAdapter {
     function setBillBOS(address _newBillBOS) external;
@@ -290,6 +290,8 @@ interface IBillBOSCore {
         uint256[] calldata _viewCount,
         uint256 _totalViewCount
     ) external returns (uint256);
+
+    function claimPlatformReward() external;
 
     // Event
 }
@@ -522,5 +524,9 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         }
         monthCount = _monthCount + 1;
         return _monthCount;
+    }
+
+    function claimPlatformReward() onlyOwner external {
+        IERC20(stakedTokenAddress).transfer(owner(), platformBalance);
     }
 }
