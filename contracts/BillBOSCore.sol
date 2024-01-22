@@ -229,4 +229,8 @@ contract BillBOSCore is IBillBOSCore, Ownable {
         monthCount = _monthCount + 1;
         return _monthCount;
     }
+
+    function claimPlatformReward() onlyOwner external {
+        IERC20(stakedTokenAddress).transfer(owner(), platformBalance);
+    }
 }

@@ -5,7 +5,7 @@
 // File contracts/interfaces/ICErc20.sol
 
 // Original license: SPDX_License_Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 interface ICErc20 {
     function mint(uint256 mintAmount) external returns (uint);
@@ -19,7 +19,7 @@ interface ICErc20 {
 // File contracts/interfaces/IERC20.sol
 
 // Original license: SPDX_License_Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);

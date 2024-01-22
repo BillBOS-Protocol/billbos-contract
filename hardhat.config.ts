@@ -15,27 +15,13 @@ const config: HardhatUserConfig = {
           },
         },
       },
-      {
-        version: "0.8.18",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
-      {
-        version: "0.8.0",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
     ],
   },
   networks: {
+    "j2o-taro": {
+      url: process.env.URL_J2O_TARO || "",
+      accounts: getAccounts(),
+    },
     "bsc-testnet": {
       url: process.env.URL_BSC_TESTNET || "",
       accounts: getAccounts(),
@@ -47,7 +33,7 @@ const config: HardhatUserConfig = {
     "bkc-testnet": {
       url: process.env.URL_BKC_TESTNET || "",
       accounts: getAccounts(),
-    }
+    },
   },
   gasReporter: {
     enabled: process.env.GAS_REPORT === "true",
