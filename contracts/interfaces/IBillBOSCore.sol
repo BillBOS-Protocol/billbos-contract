@@ -32,6 +32,8 @@ interface IBillBOSCore {
         address _webpageOwner
     ) external view returns (uint256, uint256);
 
+    function getActiveAds() external view returns (AdsRes[] memory);
+
     function setBillbosAdaptorAddress(address _billbosAdaptorAddress) external;
 
     // Method Process
@@ -57,6 +59,8 @@ interface IBillBOSCore {
     ) external returns (uint256);
 
     function claimPlatformReward() external;
+
+    function setDevAddress(address _devAddress) external;
 
     // Event
 }

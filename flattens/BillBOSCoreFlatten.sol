@@ -499,7 +499,8 @@ contract BillBOSCore is IBillBOSCore, Ownable {
     function uploadAdsReport(
         address[] calldata _webpageOwner,
         uint256[] calldata _viewCount,
-        uint256 _totalViewCount
+        uint256 _totalViewCount,
+        uint256 _count
     ) external onlyOwner returns (uint256) {
         require(
             _webpageOwner.length == _viewCount.length,

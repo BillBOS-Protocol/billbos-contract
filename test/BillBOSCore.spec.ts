@@ -46,7 +46,8 @@ describe("BillBOSCore", () => {
     const mockInitial = "0xF28cAc2532d77826C725C6092A15E98a50c79FD0";
     const billBOSCore = await BillBOSCore.connect(owner).deploy(
       mockInitial,
-      usdtAddress
+      usdtAddress,
+      owner.address
     );
     return { owner, billBOSCore };
   }
@@ -229,7 +230,7 @@ describe("BillBOSCore", () => {
           300
         );
       expect(await billBOSCore.webpageOwnerIdLast()).to.equal(2);
-      expect(await billBOSCore.monthCount()).to.equal(1);
+      expect(await billBOSCore.count()).to.equal(1);
     });
     it("should be index webpage owner is not duplicate", async () => {
       const { billBOSCore, owner } = await loadFixture(bothFixture);
@@ -255,7 +256,7 @@ describe("BillBOSCore", () => {
           600
         );
       expect(await billBOSCore.webpageOwnerIdLast()).to.equal(3);
-      expect(await billBOSCore.monthCount()).to.equal(2);
+      expect(await billBOSCore.count()).to.equal(2);
     });
     it("should be reverted if length of webpage owner and view count records is not equal", async () => {
       const { billBOSCore, owner } = await loadFixture(bothFixture);
@@ -307,12 +308,6 @@ describe("BillBOSCore", () => {
           [100, 100],
           200
         );
-      console.log(
-        ethers.formatEther((await billBOSCore.getReward(player2Address))[0])
-      );
-      console.log(
-        ethers.formatEther(await billBOSCore.totalEarningBalanceLast())
-      );
     });
     it("should be reverted if claim is not enough", async () => {
       const { billBOSCore, owner } = await loadFixture(bothFixture);
@@ -320,6 +315,50 @@ describe("BillBOSCore", () => {
       await expect(billBOSCore.connect(owner).claimReward()).to.be.revertedWith(
         "BillBOSCore: this webpageOwner is not enough reward"
       );
+    });
+    it("should be claim fee platform by dev", async () => {
+      const { billBOSCore, owner, mockUSDT } = await loadFixture(bothFixture);
+      await billBOSCore.connect(owner).createAds(mockAds, 100);
+      // await billBOSCore.connect(owner).claimReward();
+    });
+  });
+
+  describe("BillBOSCore Get Ads", async () => {
+    it("should be get ads by user", async () => {
+      const { billBOSCore, owner, player1, mockUSDT } = await loadFixture(
+        bothFixture
+      );
+      await mockUSDT
+        .connect(owner)
+        .mint(player1.address, ethers.parseEther("100"));
+      await mockUSDT
+        .connect(player1)
+        .approve(await billBOSCore.getAddress(), ethers.parseEther("100"));
+      await billBOSCore.connect(player1).createAds(mockAds, 100);
+      expect((await billBOSCore.getAdsUser(player1.address))[0][1]).to.eql([
+        mockAds.name,
+        mockAds.imageCID,
+        mockAds.newTabLink,
+        mockAds.widgetLink,
+        mockAds.isInteractive,
+      ]);
+    });
+    it("should be get ads", async () => {
+      const { billBOSCore, owner, player1, mockUSDT } = await loadFixture(
+        bothFixture
+      );
+      await mockUSDT
+        .connect(owner)
+        .mint(player1.address, ethers.parseEther("200"));
+      await mockUSDT
+        .connect(player1)
+        .approve(await billBOSCore.getAddress(), ethers.parseEther("200"));
+      await billBOSCore.connect(player1).createAds(mockAds, 100);
+      await billBOSCore.connect(player1).createAds(mockAds, 100);
+
+      await billBOSCore.connect(player1).unboost(0, 100);
+
+      console.log(await billBOSCore.getAds());
     });
   });
 });

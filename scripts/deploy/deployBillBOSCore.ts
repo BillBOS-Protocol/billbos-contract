@@ -15,7 +15,8 @@ export async function deployBillBOSCore(tokenAddress?: string) {
   }
   const billBOSCore = await BillBOSCore.deploy(
     billBOSAdapterAddress,
-    _tokenAddress
+    _tokenAddress,
+    owner.address
   );
 
   await billBOSCore.waitForDeployment();
